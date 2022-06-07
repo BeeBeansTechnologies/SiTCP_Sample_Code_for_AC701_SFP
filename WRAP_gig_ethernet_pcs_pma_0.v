@@ -12,15 +12,15 @@ module
 		input	wire			SFP_RX_P	,
 		input	wire			SFP_RX_N	,
 
-		input	wire	[7:0]	GMII_TXD	,	// out: Tx data[7:0]
-		input	wire			GMII_TX_EN	,	// out: Tx enable
-		input	wire			GMII_TX_ER	,	// out: TX error
-		output	wire	[7:0]	GMII_RXD	,	// in : Rx data[7:0]
-		output	wire			GMII_RX_DV	,	// in : Rx data valid
-		output	wire			GMII_RX_ER	,	// in : Rx error
+		input	wire	[7:0]	GMII_TXD	,
+		input	wire			GMII_TX_EN	,
+		input	wire			GMII_TX_ER	,
+		output	wire	[7:0]	GMII_RXD	,
+		output	wire			GMII_RX_DV	,
+		output	wire			GMII_RX_ER	,
 		output	wire			GMII_CLK	,
 		
-		output	wire	[15:0] 	STATUS_VECTOR,	// out: Core status.[15:0]
+		output	wire	[15:0] 	STATUS_VECTOR,
 		input	wire			SEL_SGMII	
 	);
 

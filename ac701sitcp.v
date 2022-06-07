@@ -1,54 +1,59 @@
+//-------------------------------------------------------------------//
+//
+//		Copyright (c) 2022 BeeBeans Technologies
+//			All rights reserved
+//
+//	System      : AC701
+//
+//	Module      : AC701 Evaluation Board
+//
+//	Description : Top Module of AC701 Evaluation Board (SFP)
+//
+//-------------------------------------------------------------------//
 
 `default_nettype none
 
 module
 	ac701sitcp (
-		input	wire			SYS_CLK_P	,
-		input	wire			SYS_CLK_N	,
-		input	wire			SGMII_CLK_P	,
-		input	wire			SGMII_CLK_N	,
-		inout	wire			SDA_IO		,
-		output	wire			SCL_OUT		,
-		input	wire			SW_N		,
-		output	wire			SFP_TX_P	,
-		output	wire			SFP_TX_N	,
-		input	wire			SFP_RX_P	,
-		input	wire			SFP_RX_N	,
-		output	wire			SFP_TX_DISABLE,
-		output	wire	[ 3:0]	LED,
-		input	wire	[ 3:0]	DIP
+		input	wire			SYS_CLK_P		,
+		input	wire			SYS_CLK_N		,
+		input	wire			SFP_MGT_CLK0_P	,
+		input	wire			SFP_MGT_CLK0_N	,
+		inout	wire			SDA_IO			,
+		output	wire			SCL_OUT			,
+		input	wire			SW_N			,
+		output	wire			SFP_TX_P		,
+		output	wire			SFP_TX_N		,
+		input	wire			SFP_RX_P		,
+		input	wire			SFP_RX_N		,
+		output	wire			SFP_TX_DISABLE	,
+		output	wire	[ 3:0]	LED				,
+		input	wire	[ 3:0]	GPIO_DIP_SW
 	);
 
 
 	wire			CLK_200M;
-	wire			CLK_100M;
 	reg				SYS_RSTn;
 	wire			RST_EEPROM;
-	reg		[15:0]	CNT0; 
 	wire			PLL_CLKFB;
 	wire			LOCKED;
 	wire			CLK_125M_PLL_DELAY;
-	
 	reg		[29:0]	INICNT;
-
-	wire	[7:0]	GMII_TXD;			// out: Tx data[7:0]
+	wire	[ 7:0]	GMII_TXD;			// out: Tx data[7:0]
 	wire			GMII_TX_EN;				// out: Tx enable
 	wire			GMII_TX_ER;				// out: TX error
-	wire	[7:0]	GMII_RXD;			// in : Rx data[7:0]
+	wire	[ 7:0]	GMII_RXD;			// in : Rx data[7:0]
 	wire			GMII_RX_DV;				// in : Rx data valid
 	wire			GMII_RX_ER;				// in : Rx error
-	wire			GMII_RX_CTRL;			// in
 	wire			GMII_CLK;
 	wire			SiTCP_RST;				// out: Reset for SiTCP and related circuits
 	wire			TCP_CLOSE_REQ;			// out: Connection close request
 	wire	[15:0] 	STATUS_VECTOR;	// out: Core status.[15:0]	
-	wire 	[7:0]	TCP_RX_DATA;
+	wire 	[ 7:0]	TCP_RX_DATA;
 	wire		 	TCP_RX_WR;
 	wire		 	TCP_TX_FULL;
 	wire			TCP_OPEN_ACK;
 	wire	[15:0]	TCP_RX_WC;
-	
-	
 	wire			EEPROM_CS;
 	wire			EEPROM_SK;
 	wire			EEPROM_DI;
@@ -56,12 +61,9 @@ module
 	wire			RBCP_ACK;
 	wire	[ 7:0]	RBCP_RD;
 	wire	[31:0]	RBCP_ADDR;
-	wire 	[7:0]	RBCP_WD;
+	wire 	[ 7:0]	RBCP_WD;
 	wire			RBCP_RE;
 	wire			RBCP_WE;
-
-
-
 	wire			SIG_DET;
 	wire			RUDI_C;
 	wire			RUDI_I;
@@ -70,19 +72,14 @@ module
 	wire			Duplex_mode;
 	wire	[ 1:0]	LINKSpeed;
 	wire			Link_Status;
-	wire	[ 1:0]	SGMII_LINK;
-	wire			userclk2;
-	wire			sgmii_clk_en;
-	wire	[15:0]	CFG_REG;
 	reg				IIC_REQ;
 	wire			IIC_ACK;
-	wire	[7:0]	IIC_RDT;
+	wire	[ 7:0]	IIC_RDT;
 	wire			IIC_RVL;
 	reg				SEL_SGMII;
 	reg				PHY_RST;
 	wire			FIFO_RD_VALID;
-	wire	[7:0]	TCP_TX_DATA;
-	
+	wire	[ 7:0]	TCP_TX_DATA;
 	wire			CLK_100M_PLL;
 	wire			CLK_200M_PLL;		
 	wire 			CLK_125M_PLL;
@@ -148,7 +145,6 @@ module
 			.RST		(1'b0)
 		);
 
-	BUFG	CLK100_BG		(.O(CLK_100M),			.I(CLK_100M_PLL));
 	BUFG	CLK200_BG		(.O(CLK_200M),			.I(CLK_200M_PLL));
 
 //------------------------------------------------------------------------------
@@ -202,7 +198,7 @@ module
 		.CLK			(CLK_200M   	 ),	// in	: System Clock >129MHz
 		.RST			(RST_EEPROM		 ),	// in	: System reset
 		// Configuration parameters
-		.FORCE_DEFAULTn	(DIP[0]			 ),	// in	: Load default parameters
+		.FORCE_DEFAULTn	(GPIO_DIP_SW[0]	 ),	// in	: Load default parameters
 		.EXT_IP_ADDR	(32'd0			 ),	// in	: IP address[31:0]
 		.EXT_TCP_PORT	(16'd0			 ),	// in	: TCP port #[15:0]
 		.EXT_RBCP_PORT	(16'd0			 ),	// in	: RBCP port #[15:0]
@@ -272,22 +268,22 @@ module
 		(
 		.SYS_CLK		(CLK_200M		),
 		.RESET_IN		(PHY_RST		),
-		.SGMII_CLK_P	(SGMII_CLK_P	),
-		.SGMII_CLK_N	(SGMII_CLK_N	),
+		.SGMII_CLK_P	(SFP_MGT_CLK0_P	),
+		.SGMII_CLK_N	(SFP_MGT_CLK0_N	),
 		.SFP_TX_P		(SFP_TX_P		),
 		.SFP_TX_N		(SFP_TX_N		),
 		.SFP_RX_P		(SFP_RX_P		),
 		.SFP_RX_N		(SFP_RX_N		),
 
-		.GMII_TXD		(GMII_TXD[7:0]	),	// out: Tx data[7:0]
-		.GMII_TX_EN		(GMII_TX_EN		),	// out: Tx enable
-		.GMII_TX_ER		(GMII_TX_ER		),	// out: TX error
-		.GMII_RXD		(GMII_RXD[7:0]	),	// in : Rx data[7:0]
-		.GMII_RX_DV		(GMII_RX_DV		),	// in : Rx data valid
-		.GMII_RX_ER		(GMII_RX_ER		),	// in : Rx error
+		.GMII_TXD		(GMII_TXD[7:0]	),
+		.GMII_TX_EN		(GMII_TX_EN		),
+		.GMII_TX_ER		(GMII_TX_ER		),
+		.GMII_RXD		(GMII_RXD[7:0]	),
+		.GMII_RX_DV		(GMII_RX_DV		),
+		.GMII_RX_ER		(GMII_RX_ER		),
 		.GMII_CLK		(GMII_CLK		),
 		
-		.STATUS_VECTOR	(STATUS_VECTOR[15:0]),	// out: Core status.[15:0]
+		.STATUS_VECTOR	(STATUS_VECTOR[15:0]),
 		.SEL_SGMII		(SEL_SGMII		)
 	);
 	
@@ -316,42 +312,8 @@ module
 	assign		LED[3]		=	Link_Status;
 	assign		LED[2:1]	=	LINKSpeed[1:0];
 	assign		LED[0]		=	SEL_SGMII;
-	
-//------------------------------------------------------------------------------
-//     FIFO
-//------------------------------------------------------------------------------		
-	assign	TCP_RX_WC[15:0]		= {4'b1111,FIFO_DATA_COUNT[11:0]};
 
-	fifo_generator_v11_0 fifo_generator_v11_0(
-		.clk				(CLK_200M			),	//in	:
-		.rst				(~TCP_OPEN_ACK		),	//in	:
-		.din				(TCP_RX_DATA[7:0]	),	//in	:
-		.wr_en				(TCP_RX_WR			),	//in	OK:
-		.full				(					),	//out	:
-		.dout				(TCP_TX_DATA[7:0]	),	//out	:
-		.valid				(FIFO_RD_VALID		),	//out	OK:active h
-		.rd_en				(~TCP_TX_FULL		),	//in	:
-		.empty				(					),	//out	:
-		.data_count			(FIFO_DATA_COUNT[11:0])	//out	:
-	);
-	
-//------------------------------------------------------------------------------
-//     RBCP	TEST PLOGRAM
-//------------------------------------------------------------------------------
-	
-	RBCP	RBCP(
-		.CLK_200M	(CLK_200M),	//in
-		.DIP		(DIP[3:1]),	//in
-		.RBCP_WE	(RBCP_WE),	//in
-		.RBCP_RE	(RBCP_RE),	//in
-		.RBCP_WD	(RBCP_WD),	//in
-		.RBCP_ADDR	(RBCP_ADDR),//in
-		.RBCP_RD	(RBCP_RD),	//out
-		.RBCP_ACK	(RBCP_ACK)	//out
-	
-	);
-  
-	
+
 	always@(posedge CLK_200M or negedge SYS_RSTn)begin
 		if (~SYS_RSTn) begin
 			SIG_STATE[1:0]	<= 0;
@@ -378,6 +340,36 @@ module
 			PHY_RST			<= RST_CNT[18];
 		end
 	end
+
+
+	// FIFO
+	assign	TCP_RX_WC[15:0]		= {4'b1111,FIFO_DATA_COUNT[11:0]};
+
+	fifo_generator_v11_0 fifo_generator_v11_0(
+		.clk				(CLK_200M			),	//:	in
+		.rst				(~TCP_OPEN_ACK		),	//:	in
+		.din				(TCP_RX_DATA[7:0]	),	//:	in
+		.wr_en				(TCP_RX_WR			),	//:	in
+		.full				(					),	//:	out
+		.dout				(TCP_TX_DATA[7:0]	),	//:	out
+		.valid				(FIFO_RD_VALID		),	//:	out	active h
+		.rd_en				(~TCP_TX_FULL		),	//:	in
+		.empty				(					),	//:	out
+		.data_count			(FIFO_DATA_COUNT[11:0])	//:	out
+	);
+
+
+	// RBCP	Sample Code
+	RBCP	RBCP(
+		.CLK		(CLK_200M),			//in
+		.DIP		(GPIO_DIP_SW[3:1]),	//in
+		.RBCP_WE	(RBCP_WE),			//in
+		.RBCP_RE	(RBCP_RE),			//in
+		.RBCP_WD	(RBCP_WD[7:0]),		//in
+		.RBCP_ADDR	(RBCP_ADDR[31:0]),	//in
+		.RBCP_RD	(RBCP_RD[7:0]),		//out
+		.RBCP_ACK	(RBCP_ACK)			//out
+	);
 
 
 endmodule
